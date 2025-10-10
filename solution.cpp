@@ -7,9 +7,9 @@ int main() {
   int itemsCount;
   cin >> temp >> temp >> temp >> itemsCount;
   if (itemsCount == 1){
-  cout << "Куплен товар за 100 рублей" << endl;
+  cout << "Куплен товар за 100 рублей";
   } else {
-  cout <<  "Куплено 6 штук товара за 2300 рублей" << endl;
+  cout <<  "Куплено 6 штук товара за 2300 рублей";
   }
   return 0;
 }
