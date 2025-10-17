@@ -1,0 +1,121 @@
+=== Компиляция hi.cpp ===
+=== Запуск a.out ===
+hi
+=== Файлы после компиляции ===
+total 60K
+drwxr-xr-x 3 roman roman 4.0K Oct 17 22:21 ./
+drwxr-x--- 4 roman roman 4.0K Oct 17 21:44 ../
+drwxr-xr-x 8 roman roman 4.0K Oct 17 21:44 .git/
+-rw-r--r-- 1 roman roman   28 Oct 17 21:44 .gitignore
+-rw-r--r-- 1 roman roman  168 Oct 17 21:44 CMakeLists.txt
+-rw-r--r-- 1 roman roman 3.9K Oct 17 21:44 README.md
+-rwxr-xr-x 1 roman roman  17K Oct 17 22:21 a.out
+-rw-r--r-- 1 roman roman  117 Oct 17 22:21 execution.log
+-rw-r--r-- 1 roman roman   82 Oct 17 21:44 hi.cpp
+-rw-r--r-- 1 roman roman  266 Oct 17 21:44 names.cpp
+-rw-r--r-- 1 roman roman   83 Oct 17 21:44 ola.cpp
+=== Компиляция ola.cpp с именем ola.exe ===
+=== Запуск ola.exe ===
+ola
+=== Файлы после компиляции ola.exe ===
+total 80K
+drwxr-xr-x 3 roman roman 4.0K Oct 17 22:27 ./
+drwxr-x--- 4 roman roman 4.0K Oct 17 21:44 ../
+drwxr-xr-x 8 roman roman 4.0K Oct 17 21:44 .git/
+-rw-r--r-- 1 roman roman   28 Oct 17 21:44 .gitignore
+-rw-r--r-- 1 roman roman  168 Oct 17 21:44 CMakeLists.txt
+-rw-r--r-- 1 roman roman 3.9K Oct 17 21:44 README.md
+-rwxr-xr-x 1 roman roman  17K Oct 17 22:21 a.out
+-rw-r--r-- 1 roman roman  847 Oct 17 22:27 execution.log
+-rw-r--r-- 1 roman roman   82 Oct 17 21:44 hi.cpp
+-rw-r--r-- 1 roman roman  266 Oct 17 21:44 names.cpp
+-rw-r--r-- 1 roman roman   83 Oct 17 21:44 ola.cpp
+-rwxr-xr-x 1 roman roman  17K Oct 17 22:27 ola.exe
+=== Создание папки build ===
+=== Перемещение a.out и ola.exe в build ===
+mv: cannot stat 'a.out': No such file or directory
+mv: cannot stat 'ola.exe': No such file or directory
+=== Структура проекта ===
+.
+├── CMakeLists.txt
+├── README.md
+├── build
+│   ├── a.out
+│   └── ola.exe
+├── execution.log
+├── hi.cpp
+├── names.cpp
+└── ola.cpp
+
+2 directories, 8 files
+=== Структура ola.exe ===
+00000000000011a4 T _fini
+0000000000001000 T _init
+0000000000001080 T _start
+0000000000001169 T main
+=== Компиляция ola.cpp с clang ===
+=== Запуск ola_clang.exe ===
+ola
+=== Структура ola_clang.exe ===
+000000000000117c T _fini
+0000000000001000 T _init
+0000000000001060 T _start
+0000000000001150 T main
+=== Компиляция names.cpp ===
+=== Запуск names.exe ===
+=== Структура names.exe ===
+0000000000001180 T _Z3barv
+0000000000001160 T _Z3foodd
+0000000000001140 T _Z3foov
+0000000000001150 T _Z3foox
+000000000000119c T _fini
+0000000000001000 T _init
+0000000000001040 T _start
+0000000000001190 T bar
+0000000000001130 T main
+=== Попытка компиляции с дублированием bar() ===
+names.cpp:14:7: error: declaration of 'bar' has a different language linkage
+   14 |  void bar() {}
+      |       ^
+names.cpp:8:6: note: previous definition is here
+    8 | void bar() {}
+      |      ^
+1 error generated.
+=== Проверка файлов перед очисткой ===
+.
+├── CMakeLists.txt
+├── README.md
+├── build
+│   ├── a.out
+│   ├── names.exe
+│   ├── ola.exe
+│   └── ola_clang.exe
+├── execution.log
+├── hi.cpp
+├── names.cpp
+└── ola.cpp
+
+2 directories, 10 files
+=== Удаление директории build ===
+=== Файлы после очистки ===
+.
+├── CMakeLists.txt
+├── README.md
+├── execution.log
+├── hi.cpp
+├── names.cpp
+└── ola.cpp
+
+1 directory, 6 files
+=== Финальный вывод ls -halp ===
+total 40K
+drwxr-xr-x 3 roman roman 4.0K Oct 17 22:52 ./
+drwxr-x--- 5 roman roman 4.0K Oct 17 22:49 ../
+drwxr-xr-x 8 roman roman 4.0K Oct 17 21:44 .git/
+-rw-r--r-- 1 roman roman   28 Oct 17 21:44 .gitignore
+-rw-r--r-- 1 roman roman  168 Oct 17 21:44 CMakeLists.txt
+-rw-r--r-- 1 roman roman 3.9K Oct 17 21:44 README.md
+-rw-r--r-- 1 roman roman 3.5K Oct 17 22:54 execution.log
+-rw-r--r-- 1 roman roman   82 Oct 17 21:44 hi.cpp
+-rw-r--r-- 1 roman roman  264 Oct 17 22:51 names.cpp
+-rw-r--r-- 1 roman roman   83 Oct 17 21:44 ola.cpp
