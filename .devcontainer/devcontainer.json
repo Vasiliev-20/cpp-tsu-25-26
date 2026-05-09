@@ -1,0 +1,6 @@
+{
+  "name": "C++",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {},
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y build-essential"
+}
