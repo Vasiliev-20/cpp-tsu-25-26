@@ -1,4 +1,4 @@
-// main.cpp
+
 #include "Terminal.h"
 
 int main() {
