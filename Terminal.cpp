@@ -1,4 +1,3 @@
-// Terminal.cpp
 #include "Terminal.h"
 #include "Directory.h"
 #include "FileClasses.h"
