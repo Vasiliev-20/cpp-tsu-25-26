@@ -1,4 +1,4 @@
-// Entry.cpp
+
 #include "Entry.h"
 #include <iostream>
 
