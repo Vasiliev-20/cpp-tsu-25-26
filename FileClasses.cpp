@@ -1,4 +1,3 @@
-
 #include "FileClasses.h"
 #include "Directory.h"
 #include <iostream>
@@ -17,7 +16,7 @@ void SingleLineFile::edit() {
     std::cout << "Current content: " << content << "\n";
     std::cout << "Enter new content: ";
     std::string newContent;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // очистка буфера
+    std::cin.ignore(std::numeric_limits<long>::max(), '\n'); // очистка буфера
     std::getline(std::cin, newContent);
     content = newContent;
     std::cout << "File updated.\n";
@@ -48,7 +47,7 @@ void MultiLineFile::edit() {
     std::cout << "or 0 to add new lines (input -1 to stop): ";
     int choice;
     std::cin >> choice;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.ignore(std::numeric_limits<long>::max(), '\n');
 
     if (choice > 0 && choice <= static_cast<int>(lines.size())) {
         std::cout << "Enter new content for line " << choice << ": ";
@@ -93,7 +92,7 @@ void PostponedFile::edit() {
     std::cout << "Choose type: (s)ingle-line or (m)ulti-line: ";
     char type;
     std::cin >> type;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.ignore(std::numeric_limits<long>::max(), '\n');
 
     Directory* dir = getParent();
     if (!dir) {
