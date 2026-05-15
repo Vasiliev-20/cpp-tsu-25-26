@@ -27,14 +27,14 @@ std::shared_ptr<MemoryOperand> SymbolTable::add(const std::string& name) {   // 
     return operand;
 }
 
-std::ostream& operator<<(std::ostream& os, const SymbolTable& st) {    Вывод таблицы для отладки
+std::ostream& operator<<(std::ostream& os, const SymbolTable& st) {   // Вывод таблицы для отладки
     for (size_t i = 0; i < st._records.size(); ++i) {
         os << i << " " << st._records[i]._name << std::endl;
     }
     return os;
 }
 
-std::shared_ptr<MemoryOperand> SymbolTable::alloc() {  Генерирует уникальное временное имя __tmpX и добавляет его в таблицу
+std::shared_ptr<MemoryOperand> SymbolTable::alloc() { // Генерирует уникальное временное имя __tmpX и добавляет его в таблицу
     static int counter = 0;
     std::string tempName = "__tmp" + std::to_string(++counter);
     return add(tempName);
