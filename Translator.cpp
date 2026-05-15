@@ -217,12 +217,12 @@ std::shared_ptr<RValue> Translator::E1() {  // num — целое число (н
         nextToken();
         return std::make_shared<NumberOperand>(val);
     }
-    if (_currentLexem.type() == LexemType::chr) {   chr — символ в кавычках (например, 'A'). Превращаем ASCII-код в число и создаём NumberOperand(65).
+    if (_currentLexem.type() == LexemType::chr) { //  chr — символ в кавычках (например, 'A'). Превращаем ASCII-код в число и создаём NumberOperand(65).
         char ch = static_cast<char>(_currentLexem.value());
         nextToken();
         return std::make_shared<NumberOperand>(ch);
     }
-    if (_currentLexem.type() == LexemType::opinc) {   префиксный инкремент ++id
+    if (_currentLexem.type() == LexemType::opinc) { //  префиксный инкремент ++id
         nextToken();
         if (_currentLexem.type() != LexemType::id)
             syntaxError("Expected id after ++");
@@ -233,7 +233,7 @@ std::shared_ptr<RValue> Translator::E1() {  // num — целое число (н
         generateAtom(std::make_unique<BinaryOpAtom>("ADD", q, std::make_shared<NumberOperand>(1), r));
         return r;
     }
-    if (_currentLexem.type() == LexemType::id) {  идентификатор (переменная) с постфиксным инкрементом
+    if (_currentLexem.type() == LexemType::id) { // идентификатор (переменная) с постфиксным инкрементом
         std::string name = _currentLexem.str();
         nextToken();
         auto p = _symTable.add(name);
@@ -241,7 +241,7 @@ std::shared_ptr<RValue> Translator::E1() {  // num — целое число (н
         if (!q) syntaxError("E1_ failed");
         return q;
     }
-    if (_currentLexem.type() == LexemType::lpar) {  выражение в скобках
+    if (_currentLexem.type() == LexemType::lpar) { // выражение в скобках
         nextToken();
         auto q = E();
         if (!q) syntaxError("Expression expected after '('");
