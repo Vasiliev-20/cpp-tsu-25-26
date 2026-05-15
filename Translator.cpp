@@ -3,19 +3,19 @@
 #include <iostream>
 #include <memory>
 
-Translator::Translator(std::istream& input)
+Translator::Translator(std::istream& input)   
     : _scanner(input), _currentLexem(LexemType::eof), _nextLabel(0) {
     nextToken();
 }
 
-void Translator::nextToken() {
+void Translator::nextToken() {   // Запрашивает у лексера следующий токен и сохраняет в _currentLexem
     _currentLexem = _scanner.getNextToken();
     if (_currentLexem.type() == LexemType::error) {
         lexicalError(_currentLexem.str());
     }
 }
 
-void Translator::match(LexemType expected) {
+void Translator::match(LexemType expected) {  // Проверяет, что текущий токен имеет ожидаемый тип
     if (_currentLexem.type() == expected) {
         nextToken();
     } else {
@@ -26,25 +26,25 @@ void Translator::match(LexemType expected) {
     }
 }
 
-void Translator::generateAtom(std::unique_ptr<Atom> atom) {
-    _atoms.push_back(std::move(atom));
+void Translator::generateAtom(std::unique_ptr<Atom> atom) {  // Принимает умный указатель unique_ptr<Atom>  - созданный через std::make_unique
+    _atoms.push_back(std::move(atom)); //move(atom) — передаёт владение атомом в вектор _atoms
 }
 
-void Translator::printAtoms(std::ostream& stream) const {
+void Translator::printAtoms(std::ostream& stream) const { // Выводит все атомы в поток (ADD, '5', 2, 0)
     for (const auto& atom : _atoms) {
         stream << atom->toString() << std::endl;
     }
 }
 
-std::shared_ptr<MemoryOperand> Translator::allocTemp() {
+std::shared_ptr<MemoryOperand> Translator::allocTemp() {   // Создаёт временную переменную _tmp1
     return _symTable.alloc();
 }
 
-std::shared_ptr<LabelOperand> Translator::newLabel() {
+std::shared_ptr<LabelOperand> Translator::newLabel() { // Создаёт новую метку
     return std::make_shared<LabelOperand>(_nextLabel++);
 }
 
-void Translator::syntaxError(const std::string& message) {
+void Translator::syntaxError(const std::string& message) {  // Исключение перехватывается в translate() и выводится в cerr
     throw TranslationException("Syntax error: " + message);
 }
 
@@ -60,8 +60,8 @@ void Translator::translate() {
             syntaxError("Extra tokens after expression");
         printAtoms(std::cout);
         std::cout << "\nSYMBOL TABLE\n" << _symTable;
-    } catch (const TranslationException& e) {
-        std::cerr << e.what() << std::endl;
+    } catch (const TranslationException& e) { // catch — блок -  ловит брошенную ошибку и обрабатывает её
+        std::cerr << e.what() << std::endl; // what() возвращает строку с сообщением об ошибке
     }
 }
 
@@ -72,25 +72,25 @@ std::shared_ptr<RValue> Translator::E() {
 }
 
 std::shared_ptr<RValue> Translator::E7() {
-    auto q = E6();
+    auto q = E6(); // Левая часть
     if (!q) syntaxError("E6 failed in E7");
-    auto p = E7_(q);
+    auto p = E7_(q); // вызывает E7_ и передаёт ей результат левой части как наследуемый атрибут p
     if (!p) syntaxError("E7_ failed");
     return p;
 }
 
 std::shared_ptr<RValue> Translator::E7_(std::shared_ptr<RValue> p) {
-    if (_currentLexem.type() == LexemType::opor) {
-        nextToken();
-        auto r = E6();
+    if (_currentLexem.type() == LexemType::opor) {   // если видим ||
+        nextToken();                                  // съедаем ||
+        auto r = E6();                               // разбираем правый операнд
         if (!r) syntaxError("Expected E6 after ||");
-        auto s = allocTemp();
-        generateAtom(std::make_unique<BinaryOpAtom>("OR", p, r, s));
-        auto q = E7_(s);
+        auto s = allocTemp();                        // создаём временную переменную для результата
+        generateAtom(std::make_unique<BinaryOpAtom>("OR", p, r, s));  // генерируем атом OR
+        auto q = E7_(s);                             // рекурсивно обрабатываем следующие ||
         if (!q) syntaxError("E7_ after OR failed");
         return q;
     }
-    return p;
+    return p;   // если нет || — возвращаем накопленный результат
 }
 
 std::shared_ptr<RValue> Translator::E6() {
@@ -127,7 +127,7 @@ std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
     LexemType op = _currentLexem.type();
     if (op == LexemType::opeq || op == LexemType::opne ||
         op == LexemType::opgt || op == LexemType::oplt ||
-        op == LexemType::ople) {
+        op == LexemType::ople) {      
         nextToken();
         auto r = E4();
         if (!r) syntaxError("Expected E4 after relational operator");
@@ -176,7 +176,7 @@ std::shared_ptr<RValue> Translator::E4_(std::shared_ptr<RValue> p) {
     return p;
 }
 
-std::shared_ptr<RValue> Translator::E3() {
+std::shared_ptr<RValue> Translator::E3() { 
     auto q = E2();
     if (!q) syntaxError("E2 failed in E3");
     auto p = E3_(q);
@@ -184,8 +184,8 @@ std::shared_ptr<RValue> Translator::E3() {
     return p;
 }
 
-std::shared_ptr<RValue> Translator::E3_(std::shared_ptr<RValue> p) {
-    if (_currentLexem.type() == LexemType::opmult) {
+std::shared_ptr<RValue> Translator::E3_(std::shared_ptr<RValue> p) {  
+    if (_currentLexem.type() == LexemType::opmult) {  // * умножение
         nextToken();
         auto r = E2();
         if (!r) syntaxError("Expected E2 after *");
@@ -211,18 +211,18 @@ std::shared_ptr<RValue> Translator::E2() {
 }
 
 // Реализация E1()
-std::shared_ptr<RValue> Translator::E1() {
+std::shared_ptr<RValue> Translator::E1() {  // num — целое число (например, 3). Создаём NumberOperand(3).
     if (_currentLexem.type() == LexemType::num) {
         int val = _currentLexem.value();
         nextToken();
         return std::make_shared<NumberOperand>(val);
     }
-    if (_currentLexem.type() == LexemType::chr) {
+    if (_currentLexem.type() == LexemType::chr) {   chr — символ в кавычках (например, 'A'). Превращаем ASCII-код в число и создаём NumberOperand(65).
         char ch = static_cast<char>(_currentLexem.value());
         nextToken();
         return std::make_shared<NumberOperand>(ch);
     }
-    if (_currentLexem.type() == LexemType::opinc) {
+    if (_currentLexem.type() == LexemType::opinc) {   префиксный инкремент ++id
         nextToken();
         if (_currentLexem.type() != LexemType::id)
             syntaxError("Expected id after ++");
@@ -233,7 +233,7 @@ std::shared_ptr<RValue> Translator::E1() {
         generateAtom(std::make_unique<BinaryOpAtom>("ADD", q, std::make_shared<NumberOperand>(1), r));
         return r;
     }
-    if (_currentLexem.type() == LexemType::id) {
+    if (_currentLexem.type() == LexemType::id) {  идентификатор (переменная) с постфиксным инкрементом
         std::string name = _currentLexem.str();
         nextToken();
         auto p = _symTable.add(name);
@@ -241,7 +241,7 @@ std::shared_ptr<RValue> Translator::E1() {
         if (!q) syntaxError("E1_ failed");
         return q;
     }
-    if (_currentLexem.type() == LexemType::lpar) {
+    if (_currentLexem.type() == LexemType::lpar) {  выражение в скобках
         nextToken();
         auto q = E();
         if (!q) syntaxError("Expression expected after '('");
@@ -250,7 +250,7 @@ std::shared_ptr<RValue> Translator::E1() {
         nextToken();
         return q;
     }
-    syntaxError("Unexpected token in E1");
+    syntaxError("Unexpected token in E1"); //  ошибка
     return nullptr;
 }
 
@@ -258,11 +258,12 @@ std::shared_ptr<RValue> Translator::E1() {
 std::shared_ptr<RValue> Translator::E1_(std::shared_ptr<RValue> p) {
     if (_currentLexem.type() == LexemType::opinc) {
         nextToken();
-        auto s = p;
-        auto r = allocTemp();
-        generateAtom(std::make_unique<UnaryOpAtom>("MOV", s, r));
-        generateAtom(std::make_unique<BinaryOpAtom>("ADD", s, std::make_shared<NumberOperand>(1), std::static_pointer_cast<MemoryOperand>(s)));
-        return r;
+        auto s = p;                            // s — это операнд переменной
+        auto r = allocTemp();                  // временная для старого значения
+        generateAtom(std::make_unique<UnaryOpAtom>("MOV", s, r));  // r = s (сохраняем старое)
+        generateAtom(std::make_unique<BinaryOpAtom>("ADD", s, std::make_shared<NumberOperand>(1), 
+                   std::static_pointer_cast<MemoryOperand>(s)));   // s = s + 1
+        return r;                              // возвращаем старое значение
     }
-    return p;
+    return p;   // нет ++ — возвращаем сам операнд
 }
