@@ -4,14 +4,14 @@
 #include <sstream>
 
 // ------------------ Операнды (реализация) ------------------
-NumberOperand::NumberOperand(int value) : _value(value) {}
+NumberOperand::NumberOperand(int value) : _value(value) {}  // Конструктор просто сохраняет число.
 std::string NumberOperand::toString() const {
     return "'" + std::to_string(_value) + "'";
 }
 
-MemoryOperand::MemoryOperand(int index, const SymbolTable* symbolTable)
+MemoryOperand::MemoryOperand(int index, const SymbolTable* symbolTable) // Конструктор cохраняет индекс переменной и указатель на таблицу символов.
     : _index(index), _symbolTable(symbolTable) {}
-std::string MemoryOperand::toString() const {
+std::string MemoryOperand::toString() const {   //  возвращает индекс как строку, без кавычек
     return std::to_string(_index);
 }
 bool MemoryOperand::operator==(const MemoryOperand& other) const {
@@ -27,7 +27,7 @@ bool StringOperand::operator==(const StringOperand& other) const {
     return _index == other._index && _stringTable == other._stringTable;
 }
 
-LabelOperand::LabelOperand(int labelID) : _labelID(labelID) {}
+LabelOperand::LabelOperand(int labelID) : _labelID(labelID) {} //  хранит номер метки, возвращает его строкой.
 std::string LabelOperand::toString() const {
     return std::to_string(_labelID);
 }
@@ -64,7 +64,7 @@ std::string UnaryOpAtom::toString() const {
 ConditionalJumpAtom::ConditionalJumpAtom(const std::string& condition,
                                          std::shared_ptr<RValue> left,
                                          std::shared_ptr<RValue> right,
-                                         std::shared_ptr<LabelOperand> label)
+                                         std::shared_ptr<LabelOperand> label)  // Если условие истинно, управление передаётся на метку _label.
     : _condition(condition), _left(left), _right(right), _label(label) {}
 
 std::string ConditionalJumpAtom::toString() const {
@@ -76,7 +76,7 @@ std::string ConditionalJumpAtom::toString() const {
     return oss.str();
 }
 
-JumpAtom::JumpAtom(std::shared_ptr<LabelOperand> label) : _label(label) {}
+JumpAtom::JumpAtom(std::shared_ptr<LabelOperand> label) : _label(label) {}  // Безусловный переход — всегда идёт на метку.
 
 std::string JumpAtom::toString() const {
     std::ostringstream oss;
@@ -84,7 +84,7 @@ std::string JumpAtom::toString() const {
     return oss.str();
 }
 
-OutAtom::OutAtom(std::shared_ptr<Operand> value) : _value(value) {}
+OutAtom::OutAtom(std::shared_ptr<Operand> value) : _value(value) {} // Вывод значения
 
 std::string OutAtom::toString() const {
     std::ostringstream oss;
