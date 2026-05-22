@@ -1,117 +1,177 @@
-#ifndef ATOMS_H
-#define ATOMS_H
-
+#pragma once
 #include <string>
 #include <memory>
 
 class StringTable;
 class SymbolTable;
 
-// ------------------ Операнды (уже есть) ------------------
 class Operand {
 public:
-    virtual ~Operand() = default;
     virtual std::string toString() const = 0;
+    virtual ~Operand() = default;
 };
 
 class RValue : public Operand {
 public:
-    virtual ~RValue() = default;
-};
-
-class NumberOperand : public RValue {
-    int _value;
-public:
-    NumberOperand(int value);
-    std::string toString() const override;
+    virtual void load(std::ostream& stream) const = 0;
 };
 
 class MemoryOperand : public RValue {
-    int _index;
-    const SymbolTable* _symbolTable;
 public:
     MemoryOperand(int index, const SymbolTable* symbolTable);
     std::string toString() const override;
-    bool operator==(const MemoryOperand& other) const;
+    bool operator==(const MemoryOperand& other);
+    int index() const;
+    void load(std::ostream& stream) const override;
+    void save(std::ostream& stream) const;
+    const std::string getName() const;
+    const int countArgs() const;
+protected:
+    int index_;
+    const SymbolTable* symbolTable_;
+};
+
+class NumberOperand : public RValue {
+public:
+    explicit NumberOperand(int value);
+    std::string toString() const override;
+    void load(std::ostream& stream) const override;
+protected:
+    int value_;
 };
 
 class StringOperand : public Operand {
-    int _index;
-    const StringTable* _stringTable;
 public:
     StringOperand(int index, const StringTable* stringTable);
+    int getIndex() { return index_; }
     std::string toString() const override;
-    bool operator==(const StringOperand& other) const;
+    bool operator==(const StringOperand& other);
+protected:
+    int index_;
+    const StringTable* stringTable_;
 };
 
 class LabelOperand : public Operand {
-    int _labelID;
 public:
-    LabelOperand(int labelID);
+    explicit LabelOperand(int labelID);
     std::string toString() const override;
+    int getID();
+    bool operator==(const LabelOperand& other) const;
+    bool operator!=(const LabelOperand& other) const;
+protected:
+    int labelID_;
 };
 
-// ------------------ Атомы ------------------
 class Atom {
 public:
-    virtual ~Atom() = default;
     virtual std::string toString() const = 0;
+    virtual void generate(std::ostream& stream) const = 0;
+    virtual ~Atom() = default;
 };
 
-// Бинарная операция: ADD, SUB, MUL, DIV, AND, OR
-class BinaryOpAtom : public Atom {
-    std::string _name;
-    std::shared_ptr<RValue> _left;
-    std::shared_ptr<RValue> _right;
-    std::shared_ptr<MemoryOperand> _result;
+class CallAtom : public Atom{
 public:
-    BinaryOpAtom(const std::string& name,
-                 std::shared_ptr<RValue> left,
-                 std::shared_ptr<RValue> right,
-                 std::shared_ptr<MemoryOperand> result);
-    std::string toString() const override;
+    CallAtom(std::shared_ptr<MemoryOperand> func, std::shared_ptr<MemoryOperand> var);
+    std::string toString() const;
+    void generate(std::ostream& stream) const override;
+protected:
+    std::shared_ptr<MemoryOperand> func_;
+    std::shared_ptr<MemoryOperand> var_;
 };
 
-// Унарная операция: NEG, NOT, MOV
+class RetAtom : public Atom {
+public:
+    RetAtom(std::shared_ptr<RValue> ret, int retOffset, int varCount);
+    std::string toString() const;
+    void generate(std::ostream& stream) const override;
+private:
+    std::shared_ptr<RValue> ret_;
+    int retOffset_;
+    int localCount_;
+};
+
+class ParamAtom : public Atom {
+public:
+    ParamAtom(std::shared_ptr<RValue> param);
+    std::string toString() const;
+    void generate(std::ostream& stream) const override;
+private:
+    std::shared_ptr<RValue> param_;
+};
+
 class UnaryOpAtom : public Atom {
-    std::string _name;
-    std::shared_ptr<RValue> _operand;
-    std::shared_ptr<MemoryOperand> _result;
 public:
     UnaryOpAtom(const std::string& name,
-                std::shared_ptr<RValue> operand,
-                std::shared_ptr<MemoryOperand> result);
-    std::string toString() const override;
+        std::shared_ptr<RValue> operand,
+        std::shared_ptr<MemoryOperand> result);
+    std::string toString() const;
+    void generate(std::ostream& stream) const override;
+protected:
+    std::string name_;
+    std::shared_ptr<RValue> operand_;
+    std::shared_ptr<MemoryOperand> result_;
 };
 
-// Условный переход: EQ, NE, GT, LT, GE, LE
+class BinaryOpAtom : public Atom {
+public:
+    BinaryOpAtom(const std::string& name, std::shared_ptr<RValue> left,
+        std::shared_ptr<RValue> right, std::shared_ptr<MemoryOperand> result);
+    std::string toString() const override;
+    void generate(std::ostream& stream) const override;
+    void generateOperation(std::ostream& stream) const;
+protected:
+    std::string name_;
+    std::shared_ptr<RValue> left_;
+    std::shared_ptr<RValue> right_;
+    std::shared_ptr<MemoryOperand> result_;
+};
+
 class ConditionalJumpAtom : public Atom {
-    std::string _condition;
-    std::shared_ptr<RValue> _left;
-    std::shared_ptr<RValue> _right;
-    std::shared_ptr<LabelOperand> _label;
 public:
-    ConditionalJumpAtom(const std::string& condition,
-                        std::shared_ptr<RValue> left,
-                        std::shared_ptr<RValue> right,
-                        std::shared_ptr<LabelOperand> label);
+    ConditionalJumpAtom(const std::string& condition, std::shared_ptr<RValue> left,
+        std::shared_ptr<RValue> right, std::shared_ptr<LabelOperand> label);
     std::string toString() const override;
+    void generate(std::ostream& stream) const override;
+    void generateOperation(std::ostream& stream) const;
+protected:
+    std::string condition_;
+    std::shared_ptr<RValue> left_;
+    std::shared_ptr<RValue> right_;
+    std::shared_ptr<LabelOperand> label_;
 };
 
-// Безусловный переход: JMP
 class JumpAtom : public Atom {
-    std::shared_ptr<LabelOperand> _label;
 public:
-    JumpAtom(std::shared_ptr<LabelOperand> label);
+    explicit JumpAtom(std::shared_ptr<LabelOperand> label);
     std::string toString() const override;
+    void generate(std::ostream& stream) const override;
+protected:
+    std::shared_ptr<LabelOperand> label_;
 };
 
-// Вывод: OUT
 class OutAtom : public Atom {
-    std::shared_ptr<Operand> _value;
 public:
-    OutAtom(std::shared_ptr<Operand> value);
+    explicit OutAtom(std::shared_ptr<Operand> value);
     std::string toString() const override;
+    void generate(std::ostream& stream) const override;
+protected:
+    std::shared_ptr<Operand> value_;
 };
 
-#endif
+class InAtom : public Atom {
+public:
+    explicit InAtom(std::shared_ptr<MemoryOperand> result);
+    std::string toString() const override;
+    void generate(std::ostream& stream) const override;
+protected:
+    std::shared_ptr<MemoryOperand> result_;
+};
+
+class LabelAtom : public Atom {
+public:
+    explicit LabelAtom(std::shared_ptr<LabelOperand> label);
+    std::string toString() const override;
+    void generate(std::ostream& stream) const override;
+protected:
+    std::shared_ptr<LabelOperand> label_;
+};
