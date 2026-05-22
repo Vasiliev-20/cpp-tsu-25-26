@@ -1,21 +1,18 @@
-#ifndef STRINGTABLE_H
-#define STRINGTABLE_H
-
-#include <string>
-#include <vector>
+#pragma once
+#include "Atoms.h"
 #include <iostream>
-#include <memory> // для std::shared_ptr
-
-class StringOperand;  // предварительное объявление
+#include <vector>
+#include <stdexcept>
+#include <algorithm>
+#include <memory>
+#include <iomanip>
 
 class StringTable {
-protected:
-    std::vector<std::string> _strings;
-    std::vector<std::shared_ptr<StringOperand>> _operands;
 public:
-    const std::string& operator[](int index) const;
-    std::shared_ptr<StringOperand> add(const std::string& name);
-    friend std::ostream& operator<<(std::ostream& os, const StringTable& st);
+    const std::string& operator[](const int index) const;
+    std::shared_ptr<StringOperand> add(const std::string& str);
+    friend std::ostream& operator<<(std::ostream& os, const StringTable& table);
+    void generateStrings(std::ostream& stream) const;
+protected:
+    std::vector<std::string> strings_;
 };
-
-#endif
