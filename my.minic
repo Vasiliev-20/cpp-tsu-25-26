@@ -1,0 +1,21 @@
+int sqRoots(int x, int y, int z){
+int result;
+result = y*y - 4*x*z;
+if (result < 0){
+ out "No real roots";
+} else {
+ if (result == 0)
+out "One root";
+ else
+out "Two roots";
+}
+return result;
+}
+int main(){
+int a, b, c, d;
+in a;
+in b;
+in c;
+d = sqRoots(a, b, c);
+return 0;
+}
