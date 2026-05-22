@@ -1,267 +1,347 @@
 #include "Scaner.h"
+#include <iostream>
+#include <string>
+#include <map>
 
-// тут я преобразую тип лексемы в строку для вывода - типа из LexemType::num в "num"
-string typeToString(LexemType type) {
-    switch (type) {
-        case LexemType::num: return "num";
-        case LexemType::chr: return "chr";
-        case LexemType::str: return "str";
-        case LexemType::id: return "id";
-        case LexemType::lpar: return "lpar";
-        case LexemType::rpar: return "rpar";
-        case LexemType::lbrace: return "lbrace";
-        case LexemType::rbrace: return "rbrace";
-        case LexemType::lbracket: return "lbracket";
-        case LexemType::rbracket: return "rbracket";
-        case LexemType::semicolon: return "semicolon";
-        case LexemType::comma: return "comma";
-        case LexemType::colon: return "colon";
-        case LexemType::opassign: return "opassign";
-        case LexemType::opplus: return "opplus";
-        case LexemType::opminus: return "opminus";
-        case LexemType::opmult: return "opmult";
-        case LexemType::opinc: return "opinc";
-        case LexemType::opeq: return "opeq";
-        case LexemType::opne: return "opne";
-        case LexemType::oplt: return "oplt";
-        case LexemType::opgt: return "opgt";
-        case LexemType::ople: return "ople";
-        case LexemType::opnot: return "opnot";
-        case LexemType::opor: return "opor";
-        case LexemType::opand: return "opand";
-        case LexemType::kwint: return "kwint";
-        case LexemType::kwchar: return "kwchar";
-        case LexemType::kwif: return "kwif";
-        case LexemType::kwelse: return "kwelse";
-        case LexemType::kwswitch: return "kwswitch";
-        case LexemType::kwcase: return "kwcase";
-        case LexemType::kwwhile: return "kwwhile";
-        case LexemType::kwfor: return "kwfor";
-        case LexemType::kwreturn: return "kwreturn";
-        case LexemType::kwin: return "kwin";
-        case LexemType::kwout: return "kwout";
-        case LexemType::eof: return "eof";
-        case LexemType::error: return "error";
-        default: return "unknown";  //  иначе
+Token::Token(LexemType type) : type_(type), value_(0), str_("") {}
+Token::Token(int value) : type_(LexemType::num), value_(value), str_("") {}
+Token::Token(LexemType type, const std::string& str) : type_(type), value_(0), str_(str) {}
+Token::Token(char c) : type_(LexemType::chr), value_((int)c), str_("") {}
+Token::Token(int value, const std::string& str) : type_(LexemType::error), value_(value), str_(str) {}
+
+std::string Token::LexemTypeToString_(LexemType type) {
+	switch (type) {
+	case LexemType::num: return "num";
+	case LexemType::chr: return "chr"; 
+    case LexemType::str: return "str";
+    case LexemType::id: return "id";
+
+    case LexemType::lpar: return "lpar";
+    case LexemType::rpar: return "rpar";
+    case LexemType::lbrace: return "lbrace";
+    case LexemType::rbrace: return "rbrace";
+    case LexemType::lbracket: return "lbracket";
+    case LexemType::rbracket: return "rbracket";
+
+    case LexemType::semicolon: return "semicolon";
+    case LexemType::comma: return "comma";
+    case LexemType::colon: return "colon";
+
+    case LexemType::opassign: return "opassign";
+    case LexemType::opplus: return "opplus";
+    case LexemType::opminus: return "opminus";
+    case LexemType::opmult: return "opmult";
+    case LexemType::opinc: return "opinc";
+    case LexemType::opeq: return "opeq";
+    case LexemType::opne: return "opne";
+    case LexemType::oplt: return "oplt";
+    case LexemType::opgt: return "opgt";
+    case LexemType::ople: return "ople";
+    case LexemType::opnot: return "opnot";
+    case LexemType::opor: return "opor";
+    case LexemType::opand: return "opand";
+
+    case LexemType::kwint: return "kwint";
+    case LexemType::kwchar: return "kwchar";
+    case LexemType::kwif: return "kwif";
+    case LexemType::kwelse: return "kwelse";
+    case LexemType::kwswitch: return "kwswitch";
+    case LexemType::kwcase: return "kwcase";
+    case LexemType::kwdefault: return "kwdefault";
+    case LexemType::kwwhile: return "kwwhile";
+    case LexemType::kwfor: return "kwfor";
+    case LexemType::kwreturn: return "kwreturn";
+    case LexemType::kwin: return "kwin";
+    case LexemType::kwout: return "kwout";
+
+    case LexemType::eof: return "eof";
+    case LexemType::error: return "error";
     }
+
+    return "unknown";
 }
 
-// метод вывода токена - печатает его в поток в формате [тип, значение]
-void Token::print(ostream &stream) {
-    stream << "[" << typeToString(_type);  // сначала тип
+void Token::print(std::ostream& stream) {
+	stream << "[" << LexemTypeToString_(type_);
+    switch (type_) {
+        case LexemType::num:
+            stream << ", " << value_;
+            break;
 
-    // для чисел  -  значение типа [num, 42]
-    if (_type == LexemType::num) stream << ", " << _value;
-    // для символов -  символ в апострофах типа [chr, 'a']
-    else if (_type == LexemType::chr) stream << ", '" << (char)_value << "'";
-    // для идентификаторов, строк и ошибок -  строка в кавычках
-    else if (_type == LexemType::id || _type == LexemType::str || _type == LexemType::error)
-        stream << ", \"" << _str << "\"";
-    // для остальных типов
-    stream << "]";
+        case LexemType::chr:
+            stream << ", '" << (char)value_ << "'";
+            break;
+
+        case LexemType::id:
+        case LexemType::str:
+        case LexemType::error:
+            stream << ", \"" << str_ << "\"";
+            break;
+
+        default:
+            break;
+    }
+    stream << "]" << std::endl;
 }
 
-// конструктор сканера - заполнение таблицы знаков препинания + ключевых слов
-Scanner::Scanner(istream& stream) : _stream(stream) {
-    // заполняю таблицу знаков препинания - каждому символу свой тип лексемы
-    _punctuation = {
-        {'(', LexemType::lpar},
-        {')', LexemType::rpar},
-        {'{', LexemType::lbrace},
-        {'}', LexemType::rbrace},
-        {'[', LexemType::lbracket},
-        {']', LexemType::rbracket},
-        {';', LexemType::semicolon},
-        {',', LexemType::comma},
-        {':', LexemType::colon}
-    };
-
-    //таблица ключевых слов - каждому слову свой тип лексемы
-    _keywords = {
-        {"int", LexemType::kwint},
-        {"char", LexemType::kwchar},
-        {"if", LexemType::kwif},
-        {"else", LexemType::kwelse},
-        {"switch", LexemType::kwswitch},
-        {"case", LexemType::kwcase},
-        {"while", LexemType::kwwhile},
-        {"for", LexemType::kwfor},
-        {"return", LexemType::kwreturn},
-        {"in", LexemType::kwin},
-        {"out", LexemType::kwout}
-    };
+LexemType Token::type() {
+	return type_;
 }
 
-// получаю символ из потока - если конец файла вернет EOF
-int Scanner::getChar() { return _stream.get(); }
-
-// возвращаю символ обратно в поток - типа откатываюсь на один символ назад
-void Scanner::ungetChar() { _stream.unget(); }
-
-// проверка на пробельный символ - пробел, табуляция, перенос строки
-bool Scanner::isWhiteSpace(int c) {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+int Token::value() {
+	return value_;
 }
 
-// проверка на цифру от 0 до 9
-bool Scanner::isDigit(int c) {
-    return c >= '0' && c <= '9';
+std::string Token::str(){
+	return str_;
 }
 
-// проверка на букву английскую или подчеркивание
-bool Scanner::isLetter(int c) {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
-}
+std::map<char, LexemType> punctuation{ {'(', LexemType::lpar}, {')', LexemType::rpar}, {'{', LexemType::lbrace},
+    {'}', LexemType::rbrace}, {'[', LexemType::lbracket}, {']', LexemType::rbracket}, {';', LexemType::semicolon},
+    {',', LexemType::comma}, {':', LexemType::colon}
+};
 
-// главный метод - получаю следующий токен используя конечный автомат
-Token Scanner::getNextToken() {
-    _lexeme.clear();
-    int state = 0;
-    while (true) {
-        int c = getChar();
+std::map<std::string, LexemType> keywords{ {"int", LexemType::kwint}, {"char", LexemType::kwchar}, {"if", LexemType::kwif},
+    {"else", LexemType::kwelse}, {"switch", LexemType::kwswitch}, {"case", LexemType::kwcase}, {"default", LexemType::kwdefault}, {"while", LexemType::kwwhile},
+    {"for", LexemType::kwfor}, {"return", LexemType::kwreturn}, {"in", LexemType::kwin}, {"out", LexemType::kwout}
+};
 
-        // если конец файла - обработка в зависимости от текущего состояния
-        if (c == EOF) {
-            // если нахожусь в начальном состоянии - возвращаю конец файла
-            if (state == 0) return Token(LexemType::eof);
-            // если прочитал число - возвращаю число
-            if (state == 1) return Token(_value);
-            // если прочитал идентификатор - проверяю ключевое слово или обычный идентификатор
-            if (state == 5) {
-                if (_keywords.count(_lexeme)) {
-                    return Token(_keywords[_lexeme]);
-                } else {
-                    return Token(LexemType::id, _lexeme);
-          	}
-            }
-            // для остальных состояний - ошибка
-            return Token(LexemType::error, "неожиданный конец файла");
-        }
+std::map<int, std::string> errors{
+    {1, "invalid character"},
+    {2, "single character |"},
+    {3, "single character &"},
+    {4, "empty symbolic constant"},
+    {5, "a character constant contains more than one character"},
+    {6, "unclosed string constant"},
+    {7, "unclosed symbolic constant"}
+};
 
-        char ch = (char)c;
+Scaner::Scaner(std::istream& stream) : stream_(stream) {}
 
+Token Scaner::getNextLexem() {
+    State state = State0;
+    int value = 0;
+    std::string buffer = "";
+
+    for (;;) {
+        char c = stream_.get();
         switch (state) {
-            case 0:
-                if (isDigit(c)) {
-                    state = 1;
-                    _value = c - '0';
-                } else if (ch == '\'') {
-                    state = 2;
-                } else if (isLetter(c)) {
-                    state = 5;
-                    _lexeme += ch;
-                } else if (ch == '\"') {
-                    state = 4;
-                } else if (ch == '!') {
-                    state = 7;
-                } else if (ch == '<') {
-                    state = 8;
-                } else if (ch == '=') {
-                    state = 9;
-                } else if (ch == '+') {
-                    state = 10;
-                } else if (ch == '|') {
-                    state = 11;
-                } else if (ch == '&') {
-                    state = 12;
-                } else if (_punctuation.count(ch)) {
-                    // если это знак пунктуации - сразу возвращаю токен
-                    return Token(_punctuation[ch]);
-                } else if (ch == '>') {
-                    return Token(LexemType::opgt);
-                } else if (ch == '*') {
-                    return Token(LexemType::opmult);
-                } else if (ch == '-') {
-                    return Token(LexemType::opminus);
-                } else if (isWhiteSpace(c)) {
+            case State0:
+                if (!stream_.good()) {
+                    return Token(LexemType::eof);
+                }
+                else if (isspace(c)) {
                     continue;
-                } else {
-                    return Token(LexemType::error, string("неподдерживаемый символ: '") + ch + "'");
+                }
+                else if (punctuation.count(c)) {
+                    return Token(punctuation[c]);
+                }
+                else if (c == '-') {
+                    return Token(LexemType::opminus);
+                }
+                else if (c == '>') {
+                    return Token(LexemType::opgt);
+                }
+                else if (c == '*') {
+                    return Token(LexemType::opmult);
+                }
+                else if (isdigit(c)) {
+                    value = c - '0';
+                    state = State1;
+                    continue;
+                }
+                else if (isalpha(c) || c == '_') {
+                    buffer.clear();
+                    buffer = c;
+                    state = State5;
+                    continue;
+                }
+                else if (c == '!') {
+                    state = State7;
+                    continue;
+                }
+                else if (c == '\'') {
+                    state = State2;
+                    continue;
+                }
+                else if (c == '\"') {
+                    buffer.clear();
+                    state = State4;
+                    continue;
+                }
+                else if (c == '=') {
+                    state = State9;
+                    continue;
+                }
+                else if (c == '<') {
+                    state = State8;
+                    continue;
+                }
+                else if (c == '+') {
+                    state = State10;
+                    continue;
+                }
+                else if (c == '|') {
+                    state = State11;
+                    continue;
+                }
+                else if (c == '&') {
+                    state = State12;
+                    continue;
+                }
+                else {
+                    return Token(1, errors[1]);
                 }
                 break;
 
-            case 1:
-                if (isDigit(c)) {
-                    _value = _value * 10 + (c - '0');
-                } else {
-                    ungetChar();
-                    return Token(_value);
+            case State1:
+                if (!stream_.good()) {
+                    return Token(value);
+                }
+                if (isdigit(c)) {
+                    value = value * 10 + (c - '0');
+                }
+                else {
+                    stream_.unget();
+                    return Token(value);
                 }
                 break;
 
-            case 2:
-                if (ch == '\'') {
-                    return Token(LexemType::error, "пустая символьная константа");
+            case State2:
+                if (!stream_.good()) {
+                    return Token(7, errors[7]);
                 }
-                _value = c;
-                state = 3;
+                if (c == '\'') {
+                    return Token(4, errors[4]);
+                }
+                else {
+                    value = c;
+                    state = State3;
+                }
+                break;
+            
+            case State3:
+                if (!stream_.good()) {
+                    return Token(7, errors[7]);
+                }
+                if (c == '\'') {
+                    state = State0;
+                    return Token((char)value);
+                }
+                else {
+                    return Token(5, errors[5]);
+                }
+                
                 break;
 
-            case 3:
-                if (ch == '\'') {
-                    return Token((char)_value);
+            case State4:
+                if (!stream_.good()) {
+                    return Token(6, errors[6]);
+                } 
+                else if (c == '\"') {
+                    return Token(LexemType::str, buffer);
                 }
-                // любой другой символ - ошибка
-                return Token(LexemType::error, "символьная константа содержит более одного символа");
-
-            case 4:
-                if (ch == '\"') {
-                    return Token(LexemType::str, _lexeme);
+                else {
+                    buffer += c;
+                    state = State4;
                 }
-                _lexeme += ch;
                 break;
 
-            case 5:
-                if (isLetter(c) || isDigit(c)) {
-                    _lexeme += ch;
-                } else {
-                    ungetChar();
-                    if (_keywords.count(_lexeme)) {
-                        return Token(_keywords[_lexeme]);
-                    } else {
-                        return Token(LexemType::id, _lexeme);
+            case State5:
+                if (!stream_.good()) {
+                    if (keywords.count(buffer)) {
+                        return Token(keywords[buffer]);
                     }
+                    return Token(LexemType::id, buffer);
+                }
+                if (isalnum(c) || c == '_') {
+                    buffer += c;
+                    continue;
+                }
+                else {
+                    stream_.unget();
+                    if (keywords.count(buffer)) {
+                        return Token(keywords[buffer]);
+                    }
+                    return Token(LexemType::id, buffer);
                 }
                 break;
 
-            case 7:
-                if (ch == '=') {
+            case State7:
+                if (!stream_.good()) {
+                    return Token(LexemType::opnot);
+                }
+                if (c == '=') {
                     return Token(LexemType::opne);
                 }
-                ungetChar();
-                return Token(LexemType::opnot);
+                else {
+                    stream_.unget();
+                    return Token(LexemType::opnot);
+                }
+                break;
 
-            case 8:
-                if (ch == '=') {
+            case State8:
+                if (!stream_.good()) {
+                    return Token(LexemType::oplt);
+                }
+                if (c == '=') {
                     return Token(LexemType::ople);
                 }
-                ungetChar();
-                return Token(LexemType::oplt);
-            case 9:
-                if (ch == '=') {
+                else {
+                    stream_.unget();
+                    return Token(LexemType::oplt);
+                }
+                break;
+
+            case State9:
+                if (!stream_.good()) {
+                    return Token(LexemType::opassign);
+                }
+                if (c == '=') {
                     return Token(LexemType::opeq);
                 }
-                ungetChar();
-                return Token(LexemType::opassign);
+                else {
+                    stream_.unget();
+                    return Token(LexemType::opassign);
+                }
+                break;
 
-            case 10:
-                if (ch == '+') {
+            case State10:
+                if (!stream_.good()) {
+                    return Token(LexemType::opplus);
+                }
+                if (c == '+') {
                     return Token(LexemType::opinc);
                 }
-                ungetChar();
-                return Token(LexemType::opplus);
+                else {
+                    stream_.unget();
+                    return Token(LexemType::opplus);
+                }
+                break;
 
-            case 11:
-                if (ch == '|') {
+            case State11:
+                if (!stream_.good()) {
+                    return Token(2, errors[2]);
+                }
+                if (c == '|') {
                     return Token(LexemType::opor);
                 }
-                return Token(LexemType::error, "одиночный символ '|'");
+                else {
+                    return Token(2, errors[2]);
+                }
+                break;
 
-            case 12:
-                if (ch == '&') {
+            case State12:
+                if (!stream_.good()) {
+                    return Token(3, errors[3]);
+                }
+                if (c == '&') {
                     return Token(LexemType::opand);
                 }
-                return Token(LexemType::error, "одиночный символ '&'");
+                else {
+                    return Token(3, errors[3]);
+                }
+
         }
     }
 }
